@@ -41,3 +41,18 @@ class TTSCog(commands.Cog):
         else:
             await self.join_voice(ctx)
             self.tts.say(self.custom_messages.get_entrance(), ctx.voice_client)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def prebake(self, ctx):
+        print('Prebaking...')
+        messages = self.custom_messages.prebake([m.name for m in ctx.guild.members])
+        status = None
+        for i in range(0, len(messages)):
+            if i == 0:
+                status = await ctx.send(f'Prebaking {i + 1}/{len(messages)}')
+            else:
+                await status.edit(content=f'Prebaking {i + 1}/{len(messages)}')
+            self.tts.generate_tts(messages[i])
+        print('Prebake complete')
+        await status.edit(content='Prebake complete!')

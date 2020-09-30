@@ -2,13 +2,14 @@ import time
 from discord.ext import commands
 from ..handler.tts import TTS
 from ..handler.CustomMessages import CustomMessages
-
+from ..handler.voice_event import EventMessageResolver
 
 class TTSCog(commands.Cog):
     def __init__(self, bot, custom_messages, cache_root=None):
         self.bot = bot
         self.tts = TTS(cache_root)
         self.custom_messages = CustomMessages(custom_messages)
+        self.event_message_resolver = EventMessageResolver(self.custom_messages)
 
     async def join_voice(self, ctx):
         if not ctx.voice_client:
@@ -16,14 +17,12 @@ class TTSCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        if member != self.bot.user:
-            if after.channel is not None:
-                for client in filter(lambda c: c.channel == after.channel, self.bot.voice_clients):
-                    time.sleep(0.5)  # Wait 500 millis for the user to finish connecting
-                    self.tts.say(self.custom_messages.get_welcome(member.display_name), client)
-            else:
-                for client in filter(lambda c: c.channel == before.channel, self.bot.voice_clients):
-                    self.tts.say(self.custom_messages.get_goodbye(member.display_name), client)
+        if not member.bot:
+            channel = after.channel or before.channel
+            for voice_client in filter(lambda c: c.channel == channel, self.bot.voice_clients):
+                reaction_message = self.event_message_resolver.get_state_message(member, before, after)
+                time.sleep(0.5)  # Waiting 500 millis for the member to finish connecting to the voice channel 
+                self.tts.say(reaction_message, voice_client)
 
     @commands.command()
     async def say(self, ctx, *, text=None):

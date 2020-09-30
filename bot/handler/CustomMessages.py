@@ -1,4 +1,5 @@
 import random
+from ..event import VoiceStateEvent
 
 
 class CustomMessages:
@@ -6,7 +7,7 @@ class CustomMessages:
         self.templates = templates
 
     @staticmethod
-    def __random_message(member_name, collection):
+    def _random_message(member_name, collection):
         template = random.choice(collection)
         return template.replace('${member}', member_name)
 
@@ -19,11 +20,10 @@ class CustomMessages:
             messages.extend([msg.replace('${member}', member) for msg in templates])
         return messages
 
-    def get_welcome(self, member_name):
-        return CustomMessages.__random_message(member_name, self.templates['welcome'])
-
-    def get_goodbye(self, member_name):
-        return CustomMessages.__random_message(member_name, self.templates['goodbye'])
+    def get_event_reaction(self, event: VoiceStateEvent):
+        attr_state = "on" if event.new_value else "off"
+        reaction_templates = self.templates[event.changed_attribute][event.new_value.value]
+        return CustomMessages._random_message(event.member.display_name, reaction_templates)
 
     def get_entrance(self):
         return random.choice(self.templates['entrances'])

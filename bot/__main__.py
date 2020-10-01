@@ -1,7 +1,7 @@
 import os
 import json
 from discord.ext import commands
-from .cog.tts import TTSCog
+from bot.tts.cog import TTSCog
 
 config_path = os.getenv('ROBOTULI_CONF')
 cache_root = os.getenv('ROBOTULI_CACHE')

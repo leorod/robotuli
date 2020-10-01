@@ -21,11 +21,16 @@ class VoiceStateEvent:
         self.new_value = ToggleState.ON if after.__getattribute__(diff) else ToggleState.OFF
 
 
-# class InvocationEventType(Enum):
-#
-#
-# class BotInvocationEvent:
-#     member: Member
-#
-#     def __init__(self, member: Member):
-#         self.member = member
+class InvocationType(Enum):
+    JOIN = "join"
+    ALREADY_JOINED = "already_joined"
+    MEMBER_NOT_JOINED = "member_not_joined"
+
+
+class BotInvocationEvent:
+    member: Member
+    invocation_type: InvocationType
+
+    def __init__(self, member: Member, invocation_type: InvocationType):
+        self.member = member
+        self.invocation_type = invocation_type

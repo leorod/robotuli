@@ -1,15 +1,16 @@
 import time
 from discord.ext import commands
-from ..handler.tts import TTS
-from ..handler.CustomMessages import CustomMessages
-from ..handler.voice_event import EventMessageResolver
+from bot.tts.generation import TTS
+from bot.core.message import MessageBuilder, EventMessageResolver
+from ..core import event
+
 
 class TTSCog(commands.Cog):
     def __init__(self, bot, custom_messages, cache_root=None):
         self.bot = bot
         self.tts = TTS(cache_root)
-        self.custom_messages = CustomMessages(custom_messages)
-        self.event_message_resolver = EventMessageResolver(self.custom_messages)
+        self.message_builder = MessageBuilder(custom_messages)
+        self.event_message_resolver = EventMessageResolver(self.message_builder)
 
     async def join_voice(self, ctx):
         if not ctx.voice_client:
@@ -32,20 +33,21 @@ class TTSCog(commands.Cog):
     @commands.command()
     async def join(self, ctx):
         """Joins a voice channel"""
+        invocation_event: event.BotInvocationEvent
         if ctx.author.voice is None:
-            await ctx.send(self.custom_messages.get_user_not_joined())
+            invocation_event = event.BotInvocationEvent(ctx.author, event.InvocationType.MEMBER_NOT_JOINED)
+            await ctx.send(self.message_builder.get_event_reaction(invocation_event))
             return
-        if ctx.voice_client:
-            self.tts.say(self.custom_messages.get_already_joined(), ctx.voice_client)
-        else:
-            await self.join_voice(ctx)
-            self.tts.say(self.custom_messages.get_entrance(), ctx.voice_client)
+        invocation_type = event.InvocationType.ALREADY_JOINED if ctx.voice_client else event.InvocationType.JOIN
+        invocation_event = event.BotInvocationEvent(ctx.author, invocation_type)
+        await self.join_voice(ctx)
+        self.tts.say(self.message_builder.get_command_response(invocation_event), ctx.voice_client)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def prebake(self, ctx):
         print('Prebaking...')
-        messages = self.custom_messages.prebake([m.name for m in ctx.guild.members])
+        messages = self.message_builder.prebake([m.name for m in ctx.guild.members])
         status = None
         for i in range(0, len(messages)):
             if i == 0:

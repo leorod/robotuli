@@ -3,6 +3,7 @@ import discord
 import hashlib
 from gtts import gTTS
 
+
 class TTS:
     def __init__(self, cache_root):
         self.cache_path = cache_root + '/tts'

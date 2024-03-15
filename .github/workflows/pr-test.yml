@@ -1,8 +1,8 @@
 name: Request PR review
 run-name: ${{ github.actor }} created a new PR  ${{ github.event.url }} 🚀
 on:
-  pull_request:
-    types: [ ready_for_review ]
+  repository_dispatch:
+    types: [create-pull-request]
 jobs:
   Request-PR-Review:
     runs-on: ubuntu-latest

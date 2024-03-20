@@ -2,12 +2,11 @@ name: Request PR review
 run-name: ${{ github.actor }} created a new PR  ${{ github.event.url }} 🚀
 on:
   repository_dispatch:
-    types: [opened]
+    types: [ opened, created, ready_for_review ]
 jobs:
   Request-PR-Review:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./.github/workflows/code-review
     steps:
-      - run: node codeReview.js --user ${{ github.actor }} --pr ${{ github.event.url }}
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: node .github/workflows/code-review/codeReview.js --user ${{ github.actor }} --pr ${{ github.event.url }}
